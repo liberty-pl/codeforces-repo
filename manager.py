@@ -5,6 +5,8 @@ import shutil
 import subprocess
 import datetime
 
+import hashlib
+
 # --- Configuration ---
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 CURRENT_DIR = os.path.join(ROOT_DIR, 'Current')
@@ -29,7 +31,9 @@ def run_command(cmd, cwd=None):
 def fix_cph_paths():
     """
     Function A: Fix CPH Paths
-    Iterates through .cph/ config files and updates 'srcPath' to match the current machine's absolute path.
+    Iterates through .cph/ config files and:
+    1. Updates 'srcPath' to match the current machine's absolute path.
+    2. Renames the .prob file to match the hash of the new path (required by CPH).
     """
     print("--- Fixing CPH Paths ---")
     if not os.path.exists(CPH_DIR):
@@ -37,11 +41,15 @@ def fix_cph_paths():
         return
 
     count = 0
-    for filename in os.listdir(CPH_DIR):
-        if not (filename.endswith('.json') or filename.endswith('.prob')):
-            continue
-        
+    # List files first to avoid issues if we rename them while iterating
+    files = [f for f in os.listdir(CPH_DIR) if f.endswith('.json') or f.endswith('.prob')]
+    
+    for filename in files:
         file_path = os.path.join(CPH_DIR, filename)
+        # Skip if file was already renamed/moved in this loop
+        if not os.path.exists(file_path):
+            continue
+
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
@@ -49,27 +57,39 @@ def fix_cph_paths():
             # Check if srcPath exists
             if 'srcPath' in data:
                 old_path = data['srcPath']
-                # Extract the filename from the old path
                 src_filename = os.path.basename(old_path)
                 
                 # Construct the new correct absolute path on this machine
-                # We assume the source file is directly in 'Current/'
                 new_path = os.path.join(CURRENT_DIR, src_filename)
                 
-                # Normalize paths for comparison (handle slashes)
-                if os.path.normpath(old_path) != os.path.normpath(new_path):
-                    print(f"Updating {src_filename}:")
-                    print(f"  Old: {old_path}")
-                    print(f"  New: {new_path}")
+                # 1. Update content if path changed
+                path_changed = os.path.normpath(old_path) != os.path.normpath(new_path)
+                if path_changed:
+                    print(f"Updating content for {src_filename}")
                     data['srcPath'] = new_path
-                    
                     with open(file_path, 'w', encoding='utf-8') as f:
                         json.dump(data, f, indent=4)
+                
+                # 2. Check and Fix Filename (Hash)
+                # CPH uses md5(absolute_path) in the filename. 
+                # If we moved the file, we MUST rename the config file too.
+                new_path_hash = hashlib.md5(new_path.encode('utf-8')).hexdigest()
+                new_config_filename = f".{src_filename}_{new_path_hash}.prob"
+                new_config_path = os.path.join(CPH_DIR, new_config_filename)
+
+                if filename != new_config_filename:
+                    print(f"Renaming config file:")
+                    print(f"  From: {filename}")
+                    print(f"  To:   {new_config_filename}")
+                    shutil.move(file_path, new_config_path)
                     count += 1
+                elif path_changed:
+                    count += 1
+
         except Exception as e:
             print(f"Failed to process {filename}: {e}")
 
-    print(f"Fixed paths in {count} files.")
+    print(f"Fixed paths and filenames for {count} files.")
 
 def git_sync():
     """
@@ -148,19 +168,20 @@ def archive_contest(contest_id):
 def clean_current():
     """
     Function D: Clean
-    Removes binaries and .cph folder from Current directory.
+    Removes ALL source files, binaries and .cph folder from Current directory.
     """
     print("--- Cleaning Current Directory ---")
     
-    # 1. Remove binaries
+    # 1. Remove files
     files_cleaned = 0
     for filename in os.listdir(CURRENT_DIR):
         file_path = os.path.join(CURRENT_DIR, filename)
         if os.path.isfile(file_path):
             _, ext = os.path.splitext(filename)
-            if ext in CLEAN_EXTENSIONS:
+            # Remove both binaries AND source files
+            if ext in CLEAN_EXTENSIONS or ext in SOURCE_EXTENSIONS:
                 os.remove(file_path)
-                print(f"Deleted binary: {filename}")
+                print(f"Deleted: {filename}")
                 files_cleaned += 1
     
     # 2. Remove .cph folder

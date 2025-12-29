@@ -60,6 +60,23 @@
             "problemMatcher": []
         },
         {
+            "label": "Codeforces: Fix Paths",
+            "type": "shell",
+            "command": "python3",
+            "windows": {
+                "command": "python"
+            },
+            "args": [
+                "${workspaceFolder}/manager.py",
+                "fix"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
             "label": "Codeforces: Move Files to Current",
             "type": "shell",
             "command": "python3",
