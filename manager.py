@@ -28,25 +28,26 @@ def run_command(cmd, cwd=None):
         # We don't exit here because sometimes git pull might fail if no upstream, etc.
         # But for critical errors, it might be better to handle them.
 
-def fix_cph_paths():
+def get_filename_from_path(path):
     """
-    Function A: Fix CPH Paths
-    Iterates through .cph/ config files and:
-    1. Updates 'srcPath' to match the current machine's absolute path.
-    2. Renames the .prob file to match the hash of the new path (required by CPH).
+    Extract filename from a path string that might use Windows (\) or Unix (/) separators,
+    regardless of the current OS.
     """
-    print("--- Fixing CPH Paths ---")
-    if not os.path.exists(CPH_DIR):
-        print(f"No .cph directory found at {CPH_DIR}. Skipping.")
-        return
+    path = path.replace('\\', '/')
+    return os.path.basename(path)
+
+def process_cph_folder(cph_dir, source_dir):
+    """
+    Helper function to fix paths in a specific .cph directory.
+    """
+    if not os.path.exists(cph_dir):
+        return 0
 
     count = 0
-    # List files first to avoid issues if we rename them while iterating
-    files = [f for f in os.listdir(CPH_DIR) if f.endswith('.json') or f.endswith('.prob')]
+    files = [f for f in os.listdir(cph_dir) if f.endswith('.json') or f.endswith('.prob')]
     
     for filename in files:
-        file_path = os.path.join(CPH_DIR, filename)
-        # Skip if file was already renamed/moved in this loop
+        file_path = os.path.join(cph_dir, filename)
         if not os.path.exists(file_path):
             continue
 
@@ -54,33 +55,29 @@ def fix_cph_paths():
             with open(file_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
             
-            # Check if srcPath exists
             if 'srcPath' in data:
                 old_path = data['srcPath']
-                src_filename = os.path.basename(old_path)
+                src_filename = get_filename_from_path(old_path)
                 
-                # Construct the new correct absolute path on this machine
-                new_path = os.path.join(CURRENT_DIR, src_filename)
+                # Construct the new correct absolute path
+                new_path = os.path.join(source_dir, src_filename)
                 
-                # 1. Update content if path changed
+                # 1. Update content
                 path_changed = os.path.normpath(old_path) != os.path.normpath(new_path)
                 if path_changed:
-                    print(f"Updating content for {src_filename}")
+                    # print(f"Updating content for {src_filename} in {cph_dir}")
                     data['srcPath'] = new_path
                     with open(file_path, 'w', encoding='utf-8') as f:
                         json.dump(data, f, indent=4)
                 
-                # 2. Check and Fix Filename (Hash)
-                # CPH uses md5(absolute_path) in the filename. 
-                # If we moved the file, we MUST rename the config file too.
+                # 2. Rename file (Hash update)
                 new_path_hash = hashlib.md5(new_path.encode('utf-8')).hexdigest()
                 new_config_filename = f".{src_filename}_{new_path_hash}.prob"
-                new_config_path = os.path.join(CPH_DIR, new_config_filename)
+                new_config_path = os.path.join(cph_dir, new_config_filename)
 
                 if filename != new_config_filename:
-                    print(f"Renaming config file:")
-                    print(f"  From: {filename}")
-                    print(f"  To:   {new_config_filename}")
+                    print(f"Renaming config in {os.path.basename(os.path.dirname(cph_dir))}:")
+                    print(f"  {filename} -> {new_config_filename}")
                     shutil.move(file_path, new_config_path)
                     count += 1
                 elif path_changed:
@@ -88,8 +85,27 @@ def fix_cph_paths():
 
         except Exception as e:
             print(f"Failed to process {filename}: {e}")
+    return count
 
-    print(f"Fixed paths and filenames for {count} files.")
+def fix_cph_paths():
+    """
+    Function A: Fix CPH Paths
+    Fixes paths in Current/.cph AND Archive/*/.cph
+    """
+    print("--- Fixing CPH Paths ---")
+    
+    # 1. Fix Current
+    total_fixed = process_cph_folder(CPH_DIR, CURRENT_DIR)
+    
+    # 2. Fix Archive
+    if os.path.exists(ARCHIVE_DIR):
+        for item in os.listdir(ARCHIVE_DIR):
+            contest_dir = os.path.join(ARCHIVE_DIR, item)
+            if os.path.isdir(contest_dir):
+                contest_cph_dir = os.path.join(contest_dir, '.cph')
+                total_fixed += process_cph_folder(contest_cph_dir, contest_dir)
+
+    print(f"Fixed paths and filenames for {total_fixed} files.")
 
 def git_sync():
     """
