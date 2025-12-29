@@ -1,0 +1,23 @@
+# Binaries and Compilation Artifacts
+*.exe
+*.out
+*.o
+*.obj
+*.app
+*.dSYM
+*.class
+*.jar
+
+# System Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Python
+__pycache__/
+*.py[cod]
+
+# CPH (Competitive Programming Helper)
+# We explicitly want to track .cph folder, so we do NOT ignore it.
+# If you had a global rule ignoring hidden folders, you might need to unignore it like:
+# !.cph/

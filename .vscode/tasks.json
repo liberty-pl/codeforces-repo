@@ -1,0 +1,71 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Codeforces: Sync",
+            "type": "shell",
+            "command": "python3",
+            "windows": {
+                "command": "python"
+            },
+            "args": [
+                "${workspaceFolder}/manager.py",
+                "sync"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Codeforces: Archive",
+            "type": "shell",
+            "command": "python3",
+            "windows": {
+                "command": "python"
+            },
+            "args": [
+                "${workspaceFolder}/manager.py",
+                "archive",
+                "${input:contestId}"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "focus": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Codeforces: Clean",
+            "type": "shell",
+            "command": "python3",
+            "windows": {
+                "command": "python"
+            },
+            "args": [
+                "${workspaceFolder}/manager.py",
+                "clean"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        }
+    ],
+    "inputs": [
+        {
+            "id": "contestId",
+            "type": "promptString",
+            "description": "请输入比赛 ID (例如 1950)",
+            "default": ""
+        }
+    ]
+}
