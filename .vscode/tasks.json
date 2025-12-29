@@ -2,6 +2,27 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "C++ Compile",
+            "type": "shell",
+            "command": "g++-15",
+            "args": [
+                "-std=c++17",
+                "-O2",
+                "-Wall",
+                "${file}",
+                "-o",
+                "${fileDirname}/${fileBasenameNoExtension}"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
             "label": "Codeforces: Sync",
             "type": "shell",
             "command": "python3",
@@ -60,23 +81,6 @@
             "problemMatcher": []
         },
         {
-            "label": "Codeforces: Fix Paths",
-            "type": "shell",
-            "command": "python3",
-            "windows": {
-                "command": "python"
-            },
-            "args": [
-                "${workspaceFolder}/manager.py",
-                "fix"
-            ],
-            "presentation": {
-                "reveal": "always",
-                "panel": "shared"
-            },
-            "problemMatcher": []
-        },
-        {
             "label": "Codeforces: Move Files to Current",
             "type": "shell",
             "command": "python3",
@@ -86,6 +90,23 @@
             "args": [
                 "${workspaceFolder}/manager.py",
                 "move"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Codeforces: Fix Paths",
+            "type": "shell",
+            "command": "python3",
+            "windows": {
+                "command": "python"
+            },
+            "args": [
+                "${workspaceFolder}/manager.py",
+                "fix"
             ],
             "presentation": {
                 "reveal": "always",

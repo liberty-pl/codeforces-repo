@@ -1,4 +1,18 @@
 {
+    "editor.fontFamily": "Fira Code",
+    "editor.fontLigatures": true,
+    "code-runner.runInTerminal": true,
+    "code-runner.saveFileBeforeRun": true,
+    "code-runner.executorMap": {
+        "cpp": "cd \"$dir\" && /opt/homebrew/bin/g++-15 -std=c++17 -O2 -Wall -isystem /Users/njust-yu/code \"$fileName\" -o \"$fileNameWithoutExt\" && ./\"$fileNameWithoutExt\""
+    },
+    "code-runner.preserveFocus": false,
+    "cph.general.defaultLanguage": "cpp",
+    "cph.language.cpp.Command": "/opt/homebrew/bin/g++-15",
+    "competitive-programming-helper.compileAndRunCommand": "cd \"${fileDirname}\" && /opt/homebrew/bin/g++-15 -std=c++17 -O2 -Wall -isystem /Users/njust-yu/code \"${fileBasename}\" -o \"${fileBasenameNoExtension}\" && ./${fileBasenameNoExtension}",
+    "competitive-programming-helper.saveFileBeforeRun": true,
+    "competitive-programming-helper.executionDelay": 0,
+    "cph.language.csharp.Args": "-std=c++17 -O2 -Wall $file -o $executable",
     "cph.general.saveLocation": "${workspaceFolder}/Current",
     "cph.language.cpp.templatePath": "${workspaceFolder}/Templates/template.cpp"
 }
