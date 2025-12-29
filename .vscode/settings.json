@@ -1,0 +1,4 @@
+{
+    "cph.general.saveLocation": "${workspaceFolder}/Current",
+    "cph.language.cpp.templatePath": "${workspaceFolder}/Templates/template.cpp"
+}

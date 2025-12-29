@@ -38,7 +38,7 @@ def fix_cph_paths():
 
     count = 0
     for filename in os.listdir(CPH_DIR):
-        if not filename.endswith('.json'):
+        if not (filename.endswith('.json') or filename.endswith('.prob')):
             continue
         
         file_path = os.path.join(CPH_DIR, filename)
@@ -170,6 +170,44 @@ def clean_current():
     
     print(f"Cleaned {files_cleaned} files.")
 
+def move_files_to_current():
+    """
+    Function: Move Files
+    Moves loose source files from Root to Current.
+    Also moves .cph folder if it exists in Root.
+    """
+    print("--- Moving Source Files to Current ---")
+    files_moved = 0
+    for filename in os.listdir(ROOT_DIR):
+        file_path = os.path.join(ROOT_DIR, filename)
+        if os.path.isfile(file_path):
+            _, ext = os.path.splitext(filename)
+            if ext in SOURCE_EXTENSIONS:
+                # Don't move the manager script itself
+                if filename == 'manager.py':
+                    continue
+                
+                target_path = os.path.join(CURRENT_DIR, filename)
+                # Move file
+                shutil.move(file_path, target_path)
+                print(f"Moved: {filename}")
+                files_moved += 1
+                
+    print(f"Moved {files_moved} files to Current/.")
+
+    # Move .cph folder from Root to Current if it exists
+    root_cph = os.path.join(ROOT_DIR, '.cph')
+    if os.path.exists(root_cph):
+        if os.path.exists(CPH_DIR):
+            print(f"Removing existing {CPH_DIR} to replace with root .cph")
+            shutil.rmtree(CPH_DIR)
+        
+        shutil.move(root_cph, CPH_DIR)
+        print(f"Moved .cph folder to {CPH_DIR}")
+        
+        # Fix paths immediately after moving
+        fix_cph_paths()
+
 def main():
     if len(sys.argv) < 2:
         print("Usage:")
@@ -177,6 +215,7 @@ def main():
         print("  python manager.py sync      - Git sync (add, commit, pull, fix, push)")
         print("  python manager.py archive <ID> - Archive current contest and sync")
         print("  python manager.py clean     - Clean binaries and .cph from Current")
+        print("  python manager.py move      - Move loose source files to Current")
         return
 
     command = sys.argv[1].lower()
@@ -187,6 +226,8 @@ def main():
         git_sync()
     elif command == 'clean':
         clean_current()
+    elif command == 'move':
+        move_files_to_current()
     elif command == 'archive':
         if len(sys.argv) < 3:
             print("Error: Please provide a contest ID (e.g., python manager.py archive 1950)")
